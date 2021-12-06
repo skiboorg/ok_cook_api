@@ -1,0 +1,31 @@
+from django.db import models
+
+
+class Cart(models.Model):
+    user = models.ForeignKey('user.User', on_delete=models.CASCADE, null=True, blank=True,related_name='cart')
+    session_id = models.CharField('Сессия', max_length=50, blank=True, null=True)
+    price = models.IntegerField(default=0)
+
+    # def save(self, *args, **kwargs):
+    #
+    #
+    #     super().save(*args, **kwargs)
+
+    def __str__(self):
+        if self.user:
+            return f'Корзина пользователя {self.user.email}'
+        else:
+            return f'Корзина гостя {self.id} '
+
+    class Meta:
+        verbose_name = 'Корзина'
+        verbose_name_plural = 'Корзины'
+
+class CartItem(models.Model):
+    cart = models.ForeignKey(Cart, on_delete=models.CASCADE, blank=True, null=True, related_name='items')
+    item = models.ForeignKey('data.Item', on_delete=models.CASCADE, blank=True, null=True)
+    amount = models.IntegerField(default=0)
+
+
+
+
