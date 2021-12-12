@@ -48,10 +48,10 @@ class AddToCart(APIView):
     def post(self,request):
         data = request.data
         cart = get_cart(self.request, data.get('session_id'))
-        print(cart)
-        print(data)
+        #print(cart)
+        #print(data)
         for item in data.get('cart'):
             CartItem.objects.create(cart=cart,item_id=item['id'],amount=item['items_added'])
-            print(item['id'])
-            print(item['items_added'])
+            #print(item['id'])
+            #print(item['items_added'])
         return Response(status=200)

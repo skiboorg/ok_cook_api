@@ -81,7 +81,7 @@ class UserCreateSerializer(serializers.ModelSerializer):
         return user
 
     def perform_create(self, validated_data):
-        print(validated_data)
+        #print(validated_data)
         with transaction.atomic():
             user = User.objects.create_user(**validated_data)
             if not validated_data['used_ref_code']:

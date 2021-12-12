@@ -17,7 +17,7 @@ class UserUpdate(APIView):
     def post(self, request):
         user = request.user
 
-        print(json.loads(request.data['userData']))
+        #print(json.loads(request.data['userData']))
 
         # password = None
         # try:
@@ -40,7 +40,7 @@ class UserUpdate(APIView):
             serializer.save()
             return Response(status=200)
         else:
-            print(serializer.errors)
+            #print(serializer.errors)
             return Response(status=400)
 
 

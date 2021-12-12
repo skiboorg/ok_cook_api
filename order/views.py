@@ -25,7 +25,7 @@ class CreateOrder(APIView):
     def post(self,request):
 
         data = request.data
-        print(data)
+        # print(data)
         comment = data['order_data']['comment']
         cart = Cart.objects.get(user=self.request.user)
         code = create_random_string(digits=False, num=2) +\
