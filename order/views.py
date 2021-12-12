@@ -66,13 +66,13 @@ class CreateOrder(APIView):
         print(quickpay.base_url)
         print(quickpay.redirected_url)
 
-        msg_html = render_to_string('new_order.html', {
-            'order': new_order,
-        })
-        title = 'Новый заказ'
-
-        send_mail(title, None, settings.SMTP_FROM, [settings.ADMIN_EMAIL, 'dimon.skiborg@gmail.com'],
-                  fail_silently=False, html_message=msg_html)
+        # msg_html = render_to_string('new_order.html', {
+        #     'order': new_order,
+        # })
+        # title = 'Новый заказ'
+        #
+        # send_mail(title, None, settings.SMTP_FROM, [settings.ADMIN_EMAIL, 'dimon.skiborg@gmail.com'],
+        #           fail_silently=False, html_message=msg_html)
 
         return Response({'url':quickpay.redirected_url}, status=200)
 
