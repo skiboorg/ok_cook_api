@@ -1,11 +1,11 @@
 from django.db import models
-
+from django.utils.safestring import mark_safe
 
 
 class Order(models.Model):
     code = models.CharField('Код заказа', max_length=10, blank=True, null=True)
-    user = models.ForeignKey('user.User', on_delete=models.CASCADE, null=True, blank=True)
-    menu_type = models.ForeignKey('data.MenuType', on_delete=models.CASCADE, null=True, blank=True)
+    user = models.ForeignKey('user.User', on_delete=models.CASCADE, null=True, blank=True,verbose_name='Пользователь')
+    menu_type = models.ForeignKey('data.MenuType', on_delete=models.CASCADE, null=True, blank=True,verbose_name='Тип меню')
     city = models.CharField('Город', max_length=50, blank=True, null=True)
     address = models.TextField('Адрес доставки', blank=True, null=True)
     phone = models.CharField('Телефон', max_length=50, blank=True, null=True)
@@ -30,6 +30,10 @@ class OrderItem(models.Model):
     order = models.ForeignKey(Order, on_delete=models.CASCADE, blank=True, null=True, related_name='order_items')
     item = models.ForeignKey('data.Item', on_delete=models.CASCADE, blank=True, null=True, verbose_name='Товар в заказе')
     amount = models.IntegerField('Количество',default=0)
+
+    def image_tag(self):
+        return mark_safe('<img src="{}" width="100" height="100" />'.format(self.item.image.url))
+    image_tag.short_description = 'Изображение товара'
 
 
 

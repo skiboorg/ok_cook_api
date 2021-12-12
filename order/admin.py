@@ -3,6 +3,7 @@ from .models import *
 
 class OrderItemInline (admin.TabularInline):
     model = OrderItem
+    readonly_fields = ('image_tag','item','amount',)
     extra = 0
 
 class OrderAdmin(admin.ModelAdmin):

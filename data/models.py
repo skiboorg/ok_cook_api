@@ -1,5 +1,5 @@
 from django.db import models
-
+from django.utils.safestring import mark_safe
 
 class MenuType(models.Model):
     name = models.CharField('Название', max_length=100, blank=False, null=True)
@@ -41,3 +41,9 @@ class Item(models.Model):
     class Meta:
         verbose_name = 'Товар'
         verbose_name_plural = '2. Товары'
+
+    def image_tag(self):
+        return mark_safe('<img src="{}" width="100" height="100" />'.format(self.image.url))
+
+
+    image_tag.short_description = 'Изображение товара'
