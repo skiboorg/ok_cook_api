@@ -54,10 +54,12 @@ class CreateOrder(APIView):
         # calcRefBonuses(request.user,new_order.menu_type.price)
 
         quickpay = Quickpay(
-            receiver="410019014512803",
+            receiver=settings.YA_WALLET,
             quickpay_form="shop",
+            label=code,
             targets=f'Оплата заказа №{new_order.id}',
             paymentType="SB",
+            successURL=settings.successURL + code,
             sum=new_order.menu_type.price,
         )
         print(quickpay.base_url)
@@ -75,5 +77,9 @@ class GetOrders(generics.ListAPIView):
 
 class PaymentNotify(APIView):
     def post(self, request):
-        print(request.data)
+        print(request.data.get('label'))
+        codepro = request.data.get('codepro')
+        unaccepted = request.data.get('unaccepted')
+        print(codepro)
+        print(unaccepted)
         return Response('ОК', status=200)
