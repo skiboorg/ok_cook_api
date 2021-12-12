@@ -63,8 +63,8 @@ class CreateOrder(APIView):
             successURL=settings.successURL + code,
             sum=new_order.menu_type.price,
         )
-        print(quickpay.base_url)
-        print(quickpay.redirected_url)
+        #print(quickpay.base_url)
+        #print(quickpay.redirected_url)
 
         # msg_html = render_to_string('new_order.html', {
         #     'order': new_order,
