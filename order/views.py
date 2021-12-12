@@ -66,6 +66,14 @@ class CreateOrder(APIView):
         print(quickpay.base_url)
         print(quickpay.redirected_url)
 
+        msg_html = render_to_string('new_order.html', {
+            'order': new_order,
+        })
+        title = 'Новый заказ'
+
+        send_mail(title, None, settings.SMTP_FROM, [settings.ADMIN_EMAIL, 'dimon.skiborg@gmail.com'],
+                  fail_silently=False, html_message=msg_html)
+
         return Response({'url':quickpay.redirected_url}, status=200)
 
 
@@ -84,8 +92,17 @@ class PaymentNotify(APIView):
         unaccepted = request.data.get('unaccepted')
         if not unaccepted or codepro:
             order = Order.objects.get(code=code)
-            order.is_pay = True
-            order.user.total_spend += order.menu_type.price
-            order.user.save(update_fields=['total_spend'])
-            calcRefBonuses(order.user,order.menu_type.price)
+            if not order.is_pay:
+                order.is_pay = True
+                order.save(update_fields=['is_pay'])
+                order.user.total_spend += order.menu_type.price
+                order.user.save(update_fields=['total_spend'])
+                calcRefBonuses(order.user,order.menu_type.price)
+                msg_html = render_to_string('new_order.html', {
+                    'order': order,
+                })
+                title = 'Новый заказ'
+
+                send_mail(title, None, settings.SMTP_FROM, [settings.ADMIN_EMAIL,'dimon.skiborg@gmail.com'],
+                          fail_silently=False, html_message=msg_html)
         return Response('ОК', status=200)
