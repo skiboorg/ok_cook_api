@@ -12,6 +12,7 @@ import json
 from django.core.mail import send_mail
 from django.template.loader import render_to_string
 from user.services import create_random_string
+from .services import calcRefBonuses
 from yoomoney import Quickpay
 
 
@@ -77,9 +78,14 @@ class GetOrders(generics.ListAPIView):
 
 class PaymentNotify(APIView):
     def post(self, request):
-        print(request.data.get('label'))
+
+        code = request.data.get('label')
         codepro = request.data.get('codepro')
         unaccepted = request.data.get('unaccepted')
-        print(codepro)
-        print(unaccepted)
+        if not unaccepted or codepro:
+            order = Order.objects.get(code=code)
+            order.is_pay = True
+            order.user.total_spend += order.menu_type.price
+            order.user.save(update_fields=['total_spend'])
+            calcRefBonuses(order.user,order.menu_type.price)
         return Response('ОК', status=200)

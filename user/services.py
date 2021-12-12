@@ -9,6 +9,7 @@ def create_random_string(digits=False, num=4):
         random_string = ''.join(choices(string.digits, k=num))
     return random_string
 
+
 def updateRefferals():
     from user.models import User, UserRefferalFirstLine, UserRefferalSecondLine, UserRefferalThirdLine
     """Поиск запись всех линий реффералов для всех пользователей"""
