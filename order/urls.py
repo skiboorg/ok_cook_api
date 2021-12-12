@@ -4,6 +4,6 @@ from . import views
 urlpatterns = [
     path('create', views.CreateOrder.as_view()),
     path('get', views.GetOrders.as_view()),
-    path('payment_notify', views.PaymentNotify.as_view()),
+    path('pay_notify', views.PaymentNotify.as_view()),
 
 ]

@@ -8,16 +8,21 @@ from .serializers import *
 
 def get_cart(request,session_id):
     print(request.user.is_authenticated)
+
     if request.user.is_authenticated:
         try:
             cart = Cart.objects.get(user=request.user)
             print('found user cart')
         except Cart.DoesNotExist:
             print('not found user cart')
-            cart = Cart.objects.get(session_id=session_id)
-            cart.user = request.user
-            cart.save(update_fields=['user'])
-            print('set current cart for user')
+            cart = Cart.objects.filter(session_id=session_id).first()
+            if cart:
+                cart.user = request.user
+                cart.save(update_fields=['user'])
+                print('set current cart for user')
+            else:
+                cart = Cart.objects.create(user=request.user)
+                print('create new cart for user')
     else:
         cart, created = Cart.objects.get_or_create(session_id=session_id)
         print(session_id)

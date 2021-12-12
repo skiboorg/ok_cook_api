@@ -1,12 +1,16 @@
 import json
 from rest_framework.views import APIView
 from rest_framework.permissions import IsAuthenticated
-from .services import create_random_string
+from .services import create_random_string,updateRefferals
 from .serializers import *
 from .models import *
 from rest_framework import generics
 
 
+class Test(APIView):
+    def get(self,request):
+        updateRefferals()
+        return Response(status=200)
 class UserUpdate(APIView):
     permission_classes = [IsAuthenticated]
 
@@ -63,3 +67,23 @@ class UserRecoverPassword(APIView):
         else:
             return Response({'result': False}, status=200)
 
+
+class GetReferals(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self,request):
+
+
+        first_line_users = UserRefferalFirstLine.objects.get(user=request.user)
+
+        second_line_users = UserRefferalSecondLine.objects.get(user=request.user)
+
+        third_line_users = UserRefferalThirdLine.objects.get(user=request.user)
+        serializer_1 = UserShortSerializer(first_line_users.users.all(), many=True)
+        serializer_2 = UserShortSerializer(second_line_users.users.all(), many=True)
+        serializer_3 = UserShortSerializer(third_line_users.users.all(), many=True)
+        return Response({
+            'first_line_users':serializer_1.data,
+            'second_line_users':serializer_2.data,
+            'third_line_users':serializer_3.data,
+                         }, status=200)

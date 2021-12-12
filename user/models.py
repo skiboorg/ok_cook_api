@@ -1,7 +1,7 @@
 from django.db import models
 from django.contrib.auth.models import AbstractUser, BaseUserManager
 from django.db.models.signals import post_save
-from .services import create_random_string
+from .services import create_random_string,updateRefferals
 from cart.models import Cart
 
 class UserManager(BaseUserManager):
@@ -45,10 +45,12 @@ class User(AbstractUser):
     email = models.EmailField('Эл. почта', blank=True, null=True, unique=True)
     own_ref_code = models.CharField('Собственный реф код', max_length=50, blank=True, null=True)
     used_ref_code = models.CharField('Использованный реф код', max_length=50, blank=True, null=True)
-    balance = models.DecimalField('Баланс', decimal_places=2, max_digits=6, blank=True, null=True)
-    ref_bonuses = models.DecimalField('Реф бонусы', decimal_places=2, max_digits=6, blank=True, null=True)
+    balance = models.DecimalField('Баланс', decimal_places=2, max_digits=6, blank=True, default=0)
+    ref_bonuses = models.DecimalField('Реф бонусы', decimal_places=2, max_digits=6, blank=True, default=0)
+    total_spend = models.DecimalField('Всего потрачено', decimal_places=2, max_digits=6, blank=True, default=0)
 
     is_company = models.BooleanField('Это юр. лицо', default=False)
+    is_default_reffer = models.BooleanField('По умолчанию', default=False)
 
     company_name = models.CharField('Название компании', max_length=150, blank=True, null=True)
     company_address = models.TextField('Юридический адрес', blank=True, null=True)
@@ -138,8 +140,9 @@ def user_post_save(sender, instance, created, **kwargs):
     """Создание всех значений по-умолчанию для нового пользовыателя"""
     if created:
         # Cart.objects.create(user=instance)
-        instance.own_ref_code = 'OK-' + create_random_string(digits=False,num=6)
+        instance.own_ref_code = 'OK-' + create_random_string(digits=False,num=6).upper()
         instance.save(update_fields=['own_ref_code'])
+        updateRefferals()
 
 
 

@@ -10,8 +10,24 @@ from rest_framework.response import Response
 
 # User = get_user_model()
 
+class UserShortSerializer(serializers.ModelSerializer):
 
+    class Meta:
+        model = User
+        fields = [
+            'id',
+            'fio',
+            'date_joined',
+            'total_spend',
 
+        ]
+class UserLineSerializer(serializers.ModelSerializer):
+    users = UserShortSerializer(many=True, required=False, read_only=True)
+    class Meta:
+        model = UserRefferalFirstLine
+        fields = [
+            'users'
+        ]
 
 class UserSerializer(serializers.ModelSerializer):
 
@@ -36,6 +52,7 @@ class UserCreateSerializer(serializers.ModelSerializer):
         fields = tuple(User.REQUIRED_FIELDS) + (
             'email',
             "password",
+            "used_ref_code"
             # settings.LOGIN_FIELD,
             #User._meta.pk.name,
 
@@ -64,9 +81,12 @@ class UserCreateSerializer(serializers.ModelSerializer):
         return user
 
     def perform_create(self, validated_data):
-        print('validated_data',validated_data)
+        print(validated_data)
         with transaction.atomic():
             user = User.objects.create_user(**validated_data)
+            if not validated_data['used_ref_code']:
+                user.used_ref_code = '123123'
+                user.save(update_fields=["used_ref_code"])
             if settings.SEND_ACTIVATION_EMAIL:
                 user.is_active = False
                 user.save(update_fields=["is_active"])

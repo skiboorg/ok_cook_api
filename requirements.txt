@@ -4,6 +4,6 @@ pillow
 djoser
 pytils
 django-cleanup
-
+yoomoney
 
 

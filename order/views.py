@@ -12,6 +12,11 @@ import json
 from django.core.mail import send_mail
 from django.template.loader import render_to_string
 from user.services import create_random_string
+from yoomoney import Quickpay
+
+
+
+
 
 
 
@@ -22,10 +27,11 @@ class CreateOrder(APIView):
         print(data)
         comment = data['order_data']['comment']
         cart = Cart.objects.get(user=self.request.user)
-
+        code = create_random_string(digits=False, num=2) +\
+               '-' + create_random_string(digits=True, num=6)
 
         new_order = Order.objects.create(user=request.user,
-                                         code=create_random_string(digits=True,num=6),
+                                         code=code,
                                          menu_type_id=data.get('menu_type_id'),
                                          address=data['order_data']['delivery_address'],
                                          city=data['order_data']['city'],
@@ -43,7 +49,21 @@ class CreateOrder(APIView):
                                      amount=item.amount)
             item.delete()
 
-        return Response({'code':new_order.code},status=200)
+        # request.user.total_spend += new_order.menu_type.price
+        # request.user.save(update_fields=['total_spend'])
+        # calcRefBonuses(request.user,new_order.menu_type.price)
+
+        quickpay = Quickpay(
+            receiver="410019014512803",
+            quickpay_form="shop",
+            targets=f'Оплата заказа №{new_order.id}',
+            paymentType="SB",
+            sum=new_order.menu_type.price,
+        )
+        print(quickpay.base_url)
+        print(quickpay.redirected_url)
+
+        return Response({'url':quickpay.redirected_url}, status=200)
 
 
 class GetOrders(generics.ListAPIView):
@@ -52,21 +72,8 @@ class GetOrders(generics.ListAPIView):
     def get_queryset(self):
         return Order.objects.filter(user=self.request.user)
 
+
 class PaymentNotify(APIView):
     def post(self, request):
         print(request.data)
-        data = request.data
-        payment_success = data['Success']
-        if payment_success:
-            order_id = data['OrderId']
-            print(order_id)
-            order = Order.objects.get(id=order_id)
-            order.is_pay = True
-            order.save()
-
-            msg_html = render_to_string('order.html', {'order': order})
-
-            send_mail('Ваш заказ', None, settings.SMTP_FROM, [order.user.email,settings.ADMIN_EMAIL],
-                      fail_silently=False, html_message=msg_html)
-
         return Response('ОК', status=200)
