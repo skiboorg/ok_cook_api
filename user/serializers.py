@@ -17,6 +17,8 @@ class UserShortSerializer(serializers.ModelSerializer):
         fields = [
             'id',
             'fio',
+            'email',
+            'phone',
             'date_joined',
             'total_spend',
 
