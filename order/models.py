@@ -5,7 +5,6 @@ from django.utils.safestring import mark_safe
 class Order(models.Model):
     code = models.CharField('Код заказа', max_length=10, blank=True, null=True)
     user = models.ForeignKey('user.User', on_delete=models.CASCADE, null=True, blank=True,verbose_name='Пользователь')
-    menu_type = models.ForeignKey('data.MenuType', on_delete=models.CASCADE, null=True, blank=True,verbose_name='Тип меню')
     city = models.CharField('Город', max_length=50, blank=True, null=True)
     address = models.TextField('Адрес доставки', blank=True, null=True)
     phone = models.CharField('Телефон', max_length=50, blank=True, null=True)
@@ -17,6 +16,8 @@ class Order(models.Model):
     comment = models.TextField('Комментарий', blank=True, null=True)
     is_pay = models.BooleanField('Оплачен', default=False)
     created_at = models.DateTimeField(auto_now_add=True)
+    price = models.IntegerField('Стоимость заказа', default=0)
+    delivery_price = models.IntegerField('Стоимость доставки', default=0)
 
     def __str__(self):
         return f'Код заказа {self.code} | ID{self.id} | Пользователь {self.user.email}'

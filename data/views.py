@@ -5,10 +5,16 @@ from rest_framework.pagination import PageNumberPagination
 from .models import *
 from .serializers import *
 
+class GetComplect(generics.RetrieveAPIView):
+    serializer_class = ComplectSerializer
 
-class GetMenuType(generics.ListAPIView):
-    serializer_class = MenuTypeSerializer
-    queryset = MenuType.objects.all()
+    def get_object(self):
+        print(self.request.query_params.get('id'))
+        return Complect.objects.filter(id=self.request.query_params.get('id')).first()
+
+class GetComplects(generics.ListAPIView):
+    serializer_class = ComplectSerializer
+    queryset = Complect.objects.all()
 
 
 class GetCategory(generics.ListAPIView):

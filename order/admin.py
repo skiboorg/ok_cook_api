@@ -10,7 +10,6 @@ class OrderAdmin(admin.ModelAdmin):
     list_display = ('id',
                     'code',
                     'user',
-                    'menu_type',
                     'created_at',
                     'is_pay',
                     )
@@ -19,3 +18,4 @@ class OrderAdmin(admin.ModelAdmin):
     inlines = [OrderItemInline]
 
 admin.site.register(Order,OrderAdmin)
+admin.site.register(OrderItem)

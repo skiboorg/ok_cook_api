@@ -64,7 +64,7 @@ class User(AbstractUser):
     objects = UserManager()
 
     def __str__(self):
-        return f'{self.fio} {self.phone} '
+        return f'{self.fio if self.fio else ""} {self.phone if self.phone else ""} {self.email} '
 
     class Meta:
         verbose_name = 'Пользователь'

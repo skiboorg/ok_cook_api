@@ -2,7 +2,8 @@ from django.urls import path,include
 from . import views
 
 urlpatterns = [
-    path('menu_type', views.GetMenuType.as_view()),
+    path('complects', views.GetComplects.as_view()),
+    path('complect', views.GetComplect.as_view()),
     path('category', views.GetCategory.as_view()),
 
 

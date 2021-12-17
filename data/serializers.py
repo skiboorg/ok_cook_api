@@ -2,9 +2,9 @@ from rest_framework import serializers
 from .models import *
 
 
-class MenuTypeSerializer(serializers.ModelSerializer):
+class ComplectSerializer(serializers.ModelSerializer):
     class Meta:
-        model = MenuType
+        model = Complect
         fields = '__all__'
 
 class ItemSerializer(serializers.ModelSerializer):

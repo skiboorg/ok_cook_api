@@ -14,7 +14,7 @@ from django.template.loader import render_to_string
 from user.services import create_random_string
 from .services import calcRefBonuses
 from yoomoney import Quickpay
-
+from cart.views import calcCartPrice
 
 
 
@@ -23,17 +23,16 @@ from yoomoney import Quickpay
 
 class CreateOrder(APIView):
     def post(self,request):
-
         data = request.data
-        # print(data)
-        comment = data['order_data']['comment']
+        print(data)
         cart = Cart.objects.get(user=self.request.user)
-        code = create_random_string(digits=False, num=2) +\
-               '-' + create_random_string(digits=True, num=6)
+        delivery_price = 0 if cart.items_count >= 25 else 1000
+        complects  = cart.complects.all()
+
+        code = create_random_string(digits=False, num=2).upper() + '-' + create_random_string(digits=True, num=6)
 
         new_order = Order.objects.create(user=request.user,
                                          code=code,
-                                         menu_type_id=data.get('menu_type_id'),
                                          address=data['order_data']['delivery_address'],
                                          city=data['order_data']['city'],
                                          phone=data['order_data']['phone'],
@@ -44,16 +43,22 @@ class CreateOrder(APIView):
                                          company_contact=data['order_data']['company_contact'],
                                          comment=data['order_data']['comment'],
                                          )
-        for item in cart.items.all():
-            OrderItem.objects.create(order=new_order,
-                                     item=item.item,
-                                     amount=item.amount)
-            item.delete()
-
-        # request.user.total_spend += new_order.menu_type.price
-        # request.user.save(update_fields=['total_spend'])
-        # calcRefBonuses(request.user,new_order.menu_type.price)
-
+        price = 0
+        for complect in complects:
+            price += complect.price * complect.amount
+            for item in complect.items.all():
+                order_item, created = OrderItem.objects.get_or_create(item_id=item.item.id,order=new_order)
+                if created:
+                    order_item.amount = item.amount
+                else:
+                    order_item.amount += item.amount
+                order_item.save()
+        print(price)
+        new_order.price = price
+        new_order.delivery_price = delivery_price
+        new_order.save()
+        complects.delete()
+        calcCartPrice(cart)
         quickpay = Quickpay(
             receiver=settings.YA_WALLET,
             quickpay_form="shop",
@@ -61,11 +66,10 @@ class CreateOrder(APIView):
             targets=f'Оплата заказа №{new_order.id}',
             paymentType="SB",
             successURL=settings.successURL + code,
-            sum=new_order.menu_type.price,
+            sum=price + delivery_price,
         )
-        #print(quickpay.base_url)
-        #print(quickpay.redirected_url)
-
+        #
+        #
         # msg_html = render_to_string('new_order.html', {
         #     'order': new_order,
         # })
@@ -75,6 +79,7 @@ class CreateOrder(APIView):
         #           fail_silently=False, html_message=msg_html)
 
         return Response({'url':quickpay.redirected_url}, status=200)
+
 
 
 class GetOrders(generics.ListAPIView):
