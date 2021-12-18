@@ -24,7 +24,7 @@ from cart.views import calcCartPrice
 class CreateOrder(APIView):
     def post(self,request):
         data = request.data
-        print(data)
+        #print(data)
         cart = Cart.objects.get(user=self.request.user)
         delivery_price = 0 if cart.items_count >= 25 else 1000
         complects  = cart.complects.all()
@@ -54,7 +54,7 @@ class CreateOrder(APIView):
                 else:
                     order_item.amount += item.amount
                 order_item.save()
-        print(price)
+        #print(price)
         new_order.price = price
         new_order.delivery_price = delivery_price
         new_order.save()
