@@ -6,6 +6,7 @@ class Order(models.Model):
     code = models.CharField('Код заказа', max_length=10, blank=True, null=True)
     user = models.ForeignKey('user.User', on_delete=models.CASCADE, null=True, blank=True,verbose_name='Пользователь')
     city = models.CharField('Город', max_length=50, blank=True, null=True)
+    delivery_time = models.CharField('Время доставки', max_length=50, blank=True, null=True)
     address = models.TextField('Адрес доставки', blank=True, null=True)
     phone = models.CharField('Телефон', max_length=50, blank=True, null=True)
     company_name = models.CharField('Название компании', max_length=150, blank=True, null=True)

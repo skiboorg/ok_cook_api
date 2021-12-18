@@ -34,6 +34,7 @@ class CreateOrder(APIView):
         new_order = Order.objects.create(user=request.user,
                                          code=code,
                                          address=data['order_data']['delivery_address'],
+                                         delivery_time=data['order_data']['delivery_time'],
                                          city=data['order_data']['city'],
                                          phone=data['order_data']['phone'],
                                          company_name=data['order_data']['company_name'],
