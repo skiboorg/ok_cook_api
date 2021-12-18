@@ -31,7 +31,7 @@ class Category(models.Model):
 class Item(models.Model):
     name = models.CharField('Название', max_length=100, blank=True, null=True)
     category = models.ForeignKey(Category, on_delete=models.SET_NULL, blank=True, null=True, related_name='items', verbose_name='Категория')
-    image = models.ImageField('Изображение товара', upload_to='items', blank=True, null=True)
+    image = models.ImageField('Изображение товара', upload_to='items', blank=False, null=True)
     items_added = models.IntegerField('Кол-во товаров', blank=True, default=0, editable=False)
     weigth = models.CharField('Вес', max_length=10, blank=True, null=True)
     calories = models.CharField('Калории', max_length=10, blank=True, null=True)
@@ -46,7 +46,10 @@ class Item(models.Model):
         verbose_name_plural = '2. Товары'
 
     def image_tag(self):
-        return mark_safe('<img src="{}" width="100" height="100" />'.format(self.image.url))
+        if self.image:
+            return mark_safe('<img src="{}" width="100" height="100" />'.format(self.image.url))
+        else:
+            return mark_safe('<p style="color:red">НЕТ ИЗОБРАЖЕНИЯ</p>')
 
 
     image_tag.short_description = 'Изображение товара'
