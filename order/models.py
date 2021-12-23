@@ -16,7 +16,9 @@ class Order(models.Model):
     company_contact = models.CharField('Контактное лицо', max_length=100, blank=True, null=True)
     comment = models.TextField('Комментарий', blank=True, null=True)
     is_pay = models.BooleanField('Оплачен', default=False)
+    is_done = models.BooleanField('Обработан', default=False)
     created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
     price = models.IntegerField('Стоимость заказа', default=0)
     delivery_price = models.IntegerField('Стоимость доставки', default=0)
 

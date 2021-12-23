@@ -12,9 +12,10 @@ class OrderAdmin(admin.ModelAdmin):
                     'user',
                     'created_at',
                     'is_pay',
+                    'is_done',
                     )
     search_fields = ('user__email', 'code', )
-    list_filter = ('is_pay',)
+    list_filter = ('is_pay','is_done',)
     inlines = [OrderItemInline]
 
 admin.site.register(Order,OrderAdmin)

@@ -17,10 +17,12 @@ from yoomoney import Quickpay
 from cart.views import calcCartPrice
 
 
-
-
-
-
+class OrderDone(APIView):
+    def post(self, request):
+        order = Order.objects.get(id=request.data.get('id'))
+        order.is_done=True
+        order.save()
+        return Response(status=200)
 class CreateOrder(APIView):
     def post(self,request):
         data = request.data
@@ -88,6 +90,17 @@ class GetOrders(generics.ListAPIView):
 
     def get_queryset(self):
         return Order.objects.filter(user=self.request.user)
+
+
+class GetAllOrders(generics.ListAPIView):
+    serializer_class = OrderSerializer
+
+    def get_queryset(self):
+        if self.request.query_params.get('is_done') == 'done':
+            orders = Order.objects.filter(is_pay=True, is_done=True).order_by('-created_at')
+        else:
+            orders = Order.objects.filter(is_pay=True, is_done=False).order_by('-created_at')
+        return orders
 
 
 class PaymentNotify(APIView):
