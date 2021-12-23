@@ -1,3 +1,4 @@
+import pydf
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework import generics
@@ -15,14 +16,51 @@ from user.services import create_random_string
 from .services import calcRefBonuses
 from yoomoney import Quickpay
 from cart.views import calcCartPrice
+from django.utils.timezone import now
 
+def generateSkladPdf(orders):
+    html = render_to_string('order.html',
+                            {
+                                'orders': orders
+
+                            })
+    pdf = pydf.generate_pdf(html)
+    filename = f'media/sklad-{now().date()}-{now().time()}.pdf'
+    with open(filename, mode= 'wb') as f:
+        f.write(pdf)
+    return filename
+
+def generateTransportPdf(orders):
+    html = render_to_string('transport.html',
+                            {
+                                'orders': orders
+
+                            })
+    pdf = pydf.generate_pdf(html)
+    filename = f'media/transport-{now().date()}-{now().time()}.pdf'
+    with open(filename, mode= 'wb') as f:
+        f.write(pdf)
+    return filename
 
 class OrderDone(APIView):
     def post(self, request):
-        order = Order.objects.get(id=request.data.get('id'))
-        order.is_done=True
-        order.save()
-        return Response(status=200)
+        if request.data.get('action') == 'all':
+            orders = Order.objects.filter(is_pay=True, is_done=False)
+            for order in orders:
+                order.is_done = True
+                order.save()
+            sklad_filename = generateSkladPdf(orders)
+            transport_filename = generateTransportPdf(orders)
+            result = {'sklad_filename':sklad_filename,'transport_filename':transport_filename}
+        else:
+            order = Order.objects.get(id=request.data.get('id'))
+            order.is_done = True
+            order.save()
+            result = {}
+        return Response(result,status=200)
+
+
+
 class CreateOrder(APIView):
     def post(self,request):
         data = request.data
@@ -47,17 +85,29 @@ class CreateOrder(APIView):
                                          comment=data['order_data']['comment'],
                                          )
         price = 0
+        items_count=0
         for complect in complects:
             price += complect.price * complect.amount
             for item in complect.items.all():
                 order_item, created = OrderItem.objects.get_or_create(item_id=item.item.id,order=new_order)
                 if created:
-                    order_item.amount = item.amount
+                    print('created')
+
+                    order_item.amount = item.amount * complect.amount
+
                 else:
-                    order_item.amount += item.amount
+                    print('early created')
+                    order_item.amount += item.amount * complect.amount
+
+
                 order_item.save()
         #print(price)
+
+        for item in new_order.order_items.all():
+            items_count += item.amount
+
         new_order.price = price
+        new_order.total_items_count = items_count
         new_order.delivery_price = delivery_price
         new_order.save()
         complects.delete()
@@ -90,6 +140,7 @@ class GetOrders(generics.ListAPIView):
 
     def get_queryset(self):
         return Order.objects.filter(user=self.request.user)
+
 
 
 class GetAllOrders(generics.ListAPIView):

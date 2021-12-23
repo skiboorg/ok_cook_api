@@ -21,6 +21,7 @@ class Order(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
     price = models.IntegerField('Стоимость заказа', default=0)
     delivery_price = models.IntegerField('Стоимость доставки', default=0)
+    total_items_count = models.IntegerField( default=0)
 
     def __str__(self):
         return f'Код заказа {self.code} | ID{self.id} | Пользователь {self.user.email}'
