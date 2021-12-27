@@ -29,7 +29,7 @@ class UserAdmin(BaseUserAdmin):
 
          )}
          ),
-        ('Permissions', {'fields': ('is_staff', 'is_superuser',)}),)
+        ('Permissions', {'fields': ('is_staff', 'is_superuser','groups', 'user_permissions',)}),)
 
 admin.site.register(User,UserAdmin)
 admin.site.register(UserRefferalFirstLine)

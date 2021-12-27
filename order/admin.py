@@ -6,6 +6,14 @@ class OrderItemInline (admin.TabularInline):
     readonly_fields = ('image_tag','item','amount',)
     extra = 0
 
+
+class OrderCitySectorInline (admin.TabularInline):
+    model = OrderCitySector
+    extra = 0
+
+class OrderCityAdmin(admin.ModelAdmin):
+    inlines = [OrderCitySectorInline]
+
 class OrderAdmin(admin.ModelAdmin):
     list_display = ('id',
                     'code',
@@ -20,3 +28,4 @@ class OrderAdmin(admin.ModelAdmin):
 
 admin.site.register(Order,OrderAdmin)
 admin.site.register(OrderItem)
+admin.site.register(OrderCity, OrderCityAdmin)

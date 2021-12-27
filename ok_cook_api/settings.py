@@ -36,6 +36,7 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
 
     'django_cleanup',
+    'mathfilters',
 
     'djoser',
     'rest_framework.authtoken',

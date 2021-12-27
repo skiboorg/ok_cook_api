@@ -7,5 +7,6 @@ urlpatterns = [
     path('pay_notify', views.PaymentNotify.as_view()),
     path('all', views.GetAllOrders.as_view()),
     path('order_done', views.OrderDone.as_view()),
+    path('cities', views.GetCities.as_view()),
 
 ]

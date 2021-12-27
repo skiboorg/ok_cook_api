@@ -6,5 +6,6 @@ pytils
 django-cleanup
 yoomoney
 python-pdf
+django-mathfilters
 
 

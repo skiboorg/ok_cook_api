@@ -1,4 +1,4 @@
-{% load mathfilters %}
+
 <!DOCTYPE html>
 <html>
 <head>
@@ -30,28 +30,21 @@
 </head>
 <body>
 
+<h3 style="font-weight: bold">Сводная ведомость на отгрузку со склада готовой продукции на {{ date }}</h3>
+
     <table class="customers">
      <tr>
       <td>№</td>
-      <td>Код (заказ)</td>
-      <td>Получатель(фио), телефон, адрес </td>
-      <td>Время доставки</td>
-      <td>Кол-во мест</td>
+      <td>Наименование блюда</td>
+      <td>Кол-во (шт)</td>
       </tr>
-  {% for order in orders %}
-      <tr>
-      <td>{{ order.id }}</td>
-      <td>{{ order.code }}</td>
-      <td>{{ order.user.fio }},
-      {% if order.company_name %}
-          {{ order.company_name }}, {{ order.company_contact }},
-      {% endif %},
-      {{ order.city.label }} {{ order.sector.label }} {{ order.address }},
-      {{ order.phone }}
-      </td>
-      <td>{{ order.delivery_time }}</td>
-      <td>{{ order.total_items_count |div:25}}</td>
-      </tr>
+  {% for item in items %}
+     <tr>
+     <td>{{ forloop.counter }}</td>
+     <td>{{ item.item_name }}</td>
+     <td>{{ item.amount }}</td>
+
+     </tr>
 
    {% endfor %}
     </table>

@@ -37,6 +37,7 @@ class Item(models.Model):
     calories = models.CharField('Калории', max_length=10, blank=True, null=True)
     is_selected = models.BooleanField(default=False,editable=False)
     price = models.IntegerField('Цена', default=300)
+    ostatok = models.IntegerField('Остаток', default=0)
 
     def __str__(self):
         return f'{self.name}  '

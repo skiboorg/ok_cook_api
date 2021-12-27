@@ -18,6 +18,31 @@ from yoomoney import Quickpay
 from cart.views import calcCartPrice
 from django.utils.timezone import now
 
+
+def generateCalcPdf(orders):
+    items = []
+    for order in orders:
+        for item in order.order_items.all():
+            if [element for element in items if element['item_name'] == item.item.name]:
+                x = [element for element in items if element['item_name'] == item.item.name]
+                index = next((i for i, xx in enumerate(items) if xx["item_name"] == item.item.name), None)
+                items[index]['amount'] += item.amount
+
+            else:
+                items.append({'item_name':item.item.name,'amount':item.amount})
+
+    html = render_to_string('calc.html',
+                            {   'date':now().date(),
+                                'items': items
+                            })
+
+    pdf = pydf.generate_pdf(html)
+    filename = f'media/calc-{now().date()}-{now().time()}.pdf'
+    with open(filename, mode= 'wb') as f:
+        f.write(pdf)
+    return filename
+
+
 def generateSkladPdf(orders):
     html = render_to_string('order.html',
                             {
@@ -45,13 +70,17 @@ def generateTransportPdf(orders):
 class OrderDone(APIView):
     def post(self, request):
         if request.data.get('action') == 'all':
-            orders = Order.objects.filter(is_pay=True, is_done=False)
+            orders = Order.objects.filter(is_pay=True, is_done=False).order_by('sector')
             for order in orders:
                 order.is_done = True
                 order.save()
+            calc_filename = generateCalcPdf(orders)
             sklad_filename = generateSkladPdf(orders)
             transport_filename = generateTransportPdf(orders)
-            result = {'sklad_filename':sklad_filename,'transport_filename':transport_filename}
+            result = {'sklad_filename':sklad_filename,
+                      'transport_filename':transport_filename,
+                      'calc_filename':calc_filename,
+                      }
         else:
             order = Order.objects.get(id=request.data.get('id'))
             order.is_done = True
@@ -64,7 +93,9 @@ class OrderDone(APIView):
 class CreateOrder(APIView):
     def post(self,request):
         data = request.data
-        #print(data)
+        city_id = data['order_data']['city']['id']
+        sector_id = data['order_data']['sector']['id']
+
         cart = Cart.objects.get(user=self.request.user)
         delivery_price = 0 if cart.items_count >= 25 else 1000
         complects  = cart.complects.all()
@@ -75,7 +106,8 @@ class CreateOrder(APIView):
                                          code=code,
                                          address=data['order_data']['delivery_address'],
                                          delivery_time=data['order_data']['delivery_time'],
-                                         city=data['order_data']['city'],
+                                         city_id=city_id,
+                                         sector_id=sector_id,
                                          phone=data['order_data']['phone'],
                                          company_name=data['order_data']['company_name'],
                                          company_address=data['order_data']['company_address'],
@@ -164,6 +196,11 @@ class PaymentNotify(APIView):
             order = Order.objects.get(code=code)
             if not order.is_pay:
                 order.is_pay = True
+
+                for item in order.order_items.all():
+                    item.item.ostatok -= item.amount
+                    item.item.save()
+
                 order.save(update_fields=['is_pay'])
                 order.user.total_spend += order.menu_type.price
                 order.user.save(update_fields=['total_spend'])
@@ -176,3 +213,8 @@ class PaymentNotify(APIView):
                 send_mail(title, None, settings.SMTP_FROM, [settings.ADMIN_EMAIL,'dimon.skiborg@gmail.com'],
                           fail_silently=False, html_message=msg_html)
         return Response('ОК', status=200)
+
+
+class GetCities(generics.ListAPIView):
+    serializer_class = OrderCitySerializer
+    queryset = OrderCity.objects.all()
