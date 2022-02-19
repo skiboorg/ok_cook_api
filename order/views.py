@@ -248,8 +248,11 @@ class PaymentNotify(APIView):
             order.is_pay = True
             order.save()
             for item in order.order_items.all():
+                print('ostatok before',item.item.ostatok)
+                print('item.amount',item.amount)
                 item.item.ostatok -= item.amount
                 item.item.save()
+                print('ostatok afret', item.item.ostatok)
             order.user.total_spend += order.price + order.delivery_price
             order.user.save(update_fields=['total_spend'])
             calcRefBonuses(order.user, order.price + order.delivery_price)
