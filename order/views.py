@@ -1,3 +1,5 @@
+from decimal import Decimal
+
 import pydf
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -241,7 +243,8 @@ class PaymentNotify(APIView):
         print(request.data)
         data = request.data
         payment_success = data['Success']
-        if payment_success:
+        status = data['Status']
+        if payment_success and status == 'CONFIRMED':
             order_id = data['OrderId']
             print(order_id)
             order = Order.objects.get(id=order_id)
@@ -253,9 +256,9 @@ class PaymentNotify(APIView):
                 item.item.ostatok -= item.amount
                 item.item.save()
                 print('ostatok afret', item.item.ostatok)
-            order.user.total_spend += order.price + order.delivery_price
+            order.user.total_spend += Decimal(order.price) + Decimal(order.delivery_price)
             order.user.save(update_fields=['total_spend'])
-            calcRefBonuses(order.user, order.price + order.delivery_price)
+            calcRefBonuses(order.user, Decimal(order.price) + Decimal(order.delivery_price))
             msg_html = render_to_string('new_order.html', {
                 'order': order,
             })
