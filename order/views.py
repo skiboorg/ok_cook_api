@@ -88,7 +88,66 @@ class OrderDone(APIView):
             result = {}
         return Response(result,status=200)
 
+def init_payment(order):
+    headers = {
+                  'Content-Type': 'application/json',
+                }
+    order_items = order.order_items.all()
+    order_user = order.user
+    items = []
 
+    for order_item in order_items:
+        items.append(
+            {
+                "Name": order_item.item.name,
+                "Price": order_item.item.price * 100,
+                "Quantity": order_item.amount,
+                "Amount": (order_item.item.price * 100) * order_item.amount,
+                "PaymentMethod": "full_payment",
+                "PaymentObject": "commodity",
+                "Tax": "vat10",
+            },
+        )
+
+    if order.delivery_price > 0:
+        items.append(
+            {
+                "Name": 'Доставка',
+                "Price": order.delivery_price * 100,
+                "Quantity": 1,
+                "Amount": order.delivery_price * 100,
+                "PaymentMethod": "full_payment",
+                "PaymentObject": "commodity",
+                "Tax": "vat10",
+            },
+        )
+
+    payload = {
+        "TerminalKey": settings.TERMINAL_ID,
+        "Amount":  order.price * 100 if order.delivery_price == 0 else (order.price * 100) + (order.delivery_price * 100),
+        "OrderId": order.id,
+        "Description": f'Оплата заказа №{order.id}',
+        "NotificationURL": 'https://ok-cook.ru/api/order/payment_notify',
+        # "DATA": {
+        #     "Phone": "+71234567890",
+        #     "Email": "a@test.com"
+        # },
+        "Receipt": {
+            "Email": order.user.email,
+            "Phone": order.user.phone,
+            "Taxation": "osn",
+            "Items": items
+        }
+    }
+    #print(payload)
+    response = requests.post(settings.INIT_PAYMENT_URL, data=json.dumps(payload), headers=headers)
+    response_json = response.json()
+    print(response_json)
+    if response_json['Success']:
+        #print(response_json['PaymentURL'])
+        return {'success': True, 'payment_url':response_json['PaymentURL'],'order_id':order.id,'code':order.code}
+    else:
+        return {'success': False}
 
 class CreateOrder(APIView):
     def post(self,request):
@@ -144,15 +203,7 @@ class CreateOrder(APIView):
         new_order.save()
         complects.delete()
         calcCartPrice(cart)
-        quickpay = Quickpay(
-            receiver=settings.YA_WALLET,
-            quickpay_form="shop",
-            label=code,
-            targets=f'Оплата заказа №{new_order.id}',
-            paymentType="SB",
-            successURL=settings.successURL + code,
-            sum=price + delivery_price,
-        )
+        result = init_payment(new_order)
         #
         #
         # msg_html = render_to_string('new_order.html', {
@@ -163,7 +214,7 @@ class CreateOrder(APIView):
         # send_mail(title, None, settings.SMTP_FROM, [settings.ADMIN_EMAIL, 'dimon.skiborg@gmail.com'],
         #           fail_silently=False, html_message=msg_html)
 
-        return Response({'url':quickpay.redirected_url}, status=200)
+        return Response(result, status=200)
 
 
 
@@ -185,34 +236,60 @@ class GetAllOrders(generics.ListAPIView):
             orders = Order.objects.filter(is_pay=True, is_done=False).order_by('-created_at')
         return orders
 
-
 class PaymentNotify(APIView):
     def post(self, request):
+        print(request.data)
+        data = request.data
+        payment_success = data['Success']
+        if payment_success:
+            order_id = data['OrderId']
+            print(order_id)
+            order = Order.objects.get(id=order_id)
+            order.is_pay = True
+            order.save()
+            for item in order.order_items.all():
+                item.item.ostatok -= item.amount
+                item.item.save()
+            order.user.total_spend += order.menu_type.price
+            order.user.save(update_fields=['total_spend'])
+            calcRefBonuses(order.user, order.menu_type.price)
+            msg_html = render_to_string('new_order.html', {
+                'order': order,
+            })
+            title = 'Новый заказ'
 
-        code = request.data.get('label')
-        codepro = request.data.get('codepro')
-        unaccepted = request.data.get('unaccepted')
-        if not unaccepted or codepro:
-            order = Order.objects.get(code=code)
-            if not order.is_pay:
-                order.is_pay = True
+            send_mail(title, None, settings.SMTP_FROM, [settings.ADMIN_EMAIL, 'dimon.skiborg@gmail.com'],
+                      fail_silently=False, html_message=msg_html)
 
-                for item in order.order_items.all():
-                    item.item.ostatok -= item.amount
-                    item.item.save()
-
-                order.save(update_fields=['is_pay'])
-                order.user.total_spend += order.menu_type.price
-                order.user.save(update_fields=['total_spend'])
-                calcRefBonuses(order.user,order.menu_type.price)
-                msg_html = render_to_string('new_order.html', {
-                    'order': order,
-                })
-                title = 'Новый заказ'
-
-                send_mail(title, None, settings.SMTP_FROM, [settings.ADMIN_EMAIL,'dimon.skiborg@gmail.com'],
-                          fail_silently=False, html_message=msg_html)
         return Response('ОК', status=200)
+
+# class PaymentNotify1(APIView):
+#     def post(self, request):
+#
+#         code = request.data.get('label')
+#         codepro = request.data.get('codepro')
+#         unaccepted = request.data.get('unaccepted')
+#         if not unaccepted or codepro:
+#             order = Order.objects.get(code=code)
+#             if not order.is_pay:
+#                 order.is_pay = True
+#
+#                 for item in order.order_items.all():
+#                     item.item.ostatok -= item.amount
+#                     item.item.save()
+#
+#                 order.save(update_fields=['is_pay'])
+#                 order.user.total_spend += order.menu_type.price
+#                 order.user.save(update_fields=['total_spend'])
+#                 calcRefBonuses(order.user,order.menu_type.price)
+#                 msg_html = render_to_string('new_order.html', {
+#                     'order': order,
+#                 })
+#                 title = 'Новый заказ'
+#
+#                 send_mail(title, None, settings.SMTP_FROM, [settings.ADMIN_EMAIL,'dimon.skiborg@gmail.com'],
+#                           fail_silently=False, html_message=msg_html)
+#         return Response('ОК', status=200)
 
 
 class GetCities(generics.ListAPIView):
