@@ -3,8 +3,8 @@ from user.models import *
 
 
 def calcRefBonuses(user,amount):
-    top_user_amount = Decimal(amount * 0.1)
-    next_user_amount = Decimal(amount * 0.05)
+    top_user_amount = amount * Decimal(0.1)
+    next_user_amount = amount * Decimal(0.05)
     first_line = UserRefferalFirstLine.objects.filter(users__id__in=[user.id])
     second_line = UserRefferalSecondLine.objects.filter(users__id__in=[user.id])
     third_line = UserRefferalThirdLine.objects.filter(users__id__in=[user.id])
