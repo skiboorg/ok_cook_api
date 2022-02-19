@@ -250,9 +250,9 @@ class PaymentNotify(APIView):
             for item in order.order_items.all():
                 item.item.ostatok -= item.amount
                 item.item.save()
-            order.user.total_spend += order.menu_type.price
+            order.user.total_spend += order.price + order.delivery_price
             order.user.save(update_fields=['total_spend'])
-            calcRefBonuses(order.user, order.menu_type.price)
+            calcRefBonuses(order.user, order.price + order.delivery_price)
             msg_html = render_to_string('new_order.html', {
                 'order': order,
             })
