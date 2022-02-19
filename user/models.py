@@ -46,8 +46,8 @@ class User(AbstractUser):
     own_ref_code = models.CharField('Собственный реф код', max_length=50, blank=True, null=True)
     used_ref_code = models.CharField('Использованный реф код', max_length=50, blank=True, null=True)
     balance = models.DecimalField('Баланс', decimal_places=2, max_digits=6, blank=True, default=0)
-    ref_bonuses = models.DecimalField('Реф бонусы', decimal_places=2, max_digits=6, blank=True, default=0)
-    total_spend = models.DecimalField('Всего потрачено', decimal_places=2, max_digits=6, blank=True, default=0)
+    ref_bonuses = models.DecimalField('Реф бонусы', decimal_places=2, max_digits=8, blank=True, default=0)
+    total_spend = models.DecimalField('Всего потрачено', decimal_places=2, max_digits=8, blank=True, default=0)
 
     is_company = models.BooleanField('Это юр. лицо', default=False)
     is_default_reffer = models.BooleanField('По умолчанию', default=False)
